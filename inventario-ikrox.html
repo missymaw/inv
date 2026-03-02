@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>iKROX — Conteo de Inventario</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c27;
+    --border: #2a2a3a;
+    --accent: #00e5a0;
+    --accent2: #6c63ff;
+    --warn: #ff6b35;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --danger: #ff4466;
+    --ok: #00c875;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--accent);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-size: 18px; font-weight: 800; letter-spacing: 2px; color: var(--accent); }
+  .logo span { color: var(--text); }
+  .header-stats { display: flex; gap: 12px; align-items: center; }
+  .stat-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .stat-pill b { color: var(--accent); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    background: var(--surface);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .progress-bar-bg {
+    background: var(--surface2);
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-family: 'Space Mono', monospace;
+  }
+  .progress-label span { color: var(--accent); font-weight: 700; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 1; min-width: 80px;
+    padding: 10px 8px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── VIEWS ── */
+  .view { display: none; padding: 12px 12px 120px; }
+  .view.active { display: block; }
+
+  /* ── BÚSQUEDA ── */
+  .search-box {
+    display: flex; gap: 8px;
+    margin-bottom: 12px;
+  }
+  .search-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 16px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+  .btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .btn:active { transform: scale(0.95); opacity: 0.85; }
+  .btn.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn.danger { background: var(--danger); color: #fff; }
+  .btn.warn { background: var(--warn); color: #fff; }
+
+  /* ── PRODUCT CARD ── */
+  .product-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.2s;
+    cursor: pointer;
+  }
+  .product-card:active { border-color: var(--accent); }
+  .product-card.counted { border-color: var(--ok); }
+  .product-card.counted .prod-name { color: var(--muted); }
+  .prod-info { flex: 1; min-width: 0; }
+  .prod-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prod-code { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .prod-cat { font-size: 11px; color: var(--accent2); background: rgba(108,99,255,0.15); padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 4px; }
+  .prod-count-area { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .count-display {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    min-width: 52px;
+    text-align: center;
+    padding: 6px 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .count-display.has-count { border-color: var(--ok); color: var(--ok); }
+  .count-btn {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: none;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.1s, opacity 0.2s;
+    flex-shrink: 0;
+  }
+  .count-btn:active { transform: scale(0.85); }
+  .btn-minus { background: rgba(255,68,102,0.2); color: var(--danger); border: 1px solid rgba(255,68,102,0.3); }
+  .btn-plus { background: rgba(0,229,160,0.15); color: var(--accent); border: 1px solid rgba(0,229,160,0.3); }
+  .counted-badge {
+    width: 28px; height: 28px;
+    background: var(--ok);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  /* ── MODAL CONTEO RÁPIDO ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px 40px;
+    width: 100%;
+    max-width: 500px;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-title { font-size: 13px; color: var(--muted); font-family: 'Space Mono', monospace; margin-bottom: 4px; }
+  .modal-prod-name { font-size: 22px; font-weight: 800; margin-bottom: 20px; line-height: 1.2; }
+  .modal-count-row { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 24px; }
+  .modal-btn-count {
+    width: 64px; height: 64px;
+    border-radius: 16px;
+    border: none;
+    font-size: 32px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .modal-btn-count.minus { background: rgba(255,68,102,0.2); color: var(--danger); border: 2px solid rgba(255,68,102,0.4); }
+  .modal-btn-count.plus { background: rgba(0,229,160,0.15); color: var(--accent); border: 2px solid rgba(0,229,160,0.3); }
+  .modal-count-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 56px;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 120px;
+    text-align: center;
+  }
+  .modal-input-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .modal-num-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 20px;
+    font-family: 'Space Mono', monospace;
+    color: var(--text);
+    text-align: center;
+    outline: none;
+  }
+  .modal-num-input:focus { border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 10px; }
+  .modal-actions .btn { flex: 1; padding: 14px; font-size: 16px; }
+  .modal-note {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    width: 100%;
+    margin-bottom: 12px;
+    outline: none;
+    resize: none;
+  }
+  .modal-note:focus { border-color: var(--accent2); }
+
+  /* ── FILTERS ── */
+  .filter-row { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .filter-chip.active { background: rgba(0,229,160,0.15); border-color: var(--accent); color: var(--accent); }
+
+  /* ── IMPORT VIEW ── */
+  .import-area {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 16px;
+  }
+  .import-area:hover, .import-area.dragging { border-color: var(--accent); background: rgba(0,229,160,0.05); }
+  .import-area h3 { font-size: 18px; margin-bottom: 8px; }
+  .import-area p { color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .import-area .icon { font-size: 36px; margin-bottom: 12px; }
+  #fileInput { display: none; }
+
+  /* ── RESUMEN VIEW ── */
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  .summary-card .num { font-family: 'Space Mono', monospace; font-size: 28px; font-weight: 700; }
+  .summary-card .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .summary-card.green .num { color: var(--ok); }
+  .summary-card.yellow .num { color: var(--warn); }
+  .summary-card.blue .num { color: var(--accent2); }
+  .summary-card.red .num { color: var(--danger); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    z-index: 300;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty p { font-size: 14px; line-height: 1.6; }
+
+  /* ── SECTION DIVIDERS ── */
+  .section-header {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    margin: 12px 0 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent2);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .section-header span { color: var(--muted); font-family: 'Space Mono', monospace; font-weight: 400; }
+
+  /* ── FAB ── */
+  .fab {
+    position: fixed;
+    bottom: 20px; right: 16px;
+    width: 56px; height: 56px;
+    background: var(--accent);
+    border-radius: 50%;
+    border: none;
+    color: #000;
+    font-size: 26px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0,229,160,0.4);
+    z-index: 99;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .fab:active { transform: scale(0.9); }
+
+  /* ── SETTINGS ── */
+  .settings-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .settings-row label { font-size: 14px; font-weight: 600; }
+  .settings-row small { font-size: 12px; color: var(--muted); display: block; margin-top: 2px; }
+  .toggle {
+    width: 48px; height: 26px;
+    background: var(--border);
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    border: none;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: left 0.2s;
+  }
+  .toggle.on::after { left: 25px; }
+
+  .section-title { font-size: 16px; font-weight: 800; margin-bottom: 12px; color: var(--text); }
+  .add-manual-form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .form-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    outline: none;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-row { display: flex; gap: 8px; }
+
+  /* ── KEYBOARD SHORTCUT INDICATOR ── */
+  .kbd { 
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  
+  /* Infinite scroll loading indicator */
+  #loadMore { text-align: center; padding: 20px; color: var(--muted); font-size: 13px; display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">iKROX <span>/ INV</span></div>
+  <div class="header-stats">
+    <div class="stat-pill" id="hStat1"><b id="hCounted">0</b>/<b id="hTotal">0</b></div>
+    <div class="stat-pill" id="hStat2"><b id="hPct">0%</b></div>
+  </div>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+  </div>
+  <div class="progress-label">
+    <span id="progressLeft">0 productos contados</span>
+    <span id="progressPct">0%</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('count')">🔢 Contar</div>
+  <div class="tab" onclick="switchTab('pending')">⏳ Pendientes</div>
+  <div class="tab" onclick="switchTab('done')">✅ Listos</div>
+  <div class="tab" onclick="switchTab('summary')">📊 Resumen</div>
+  <div class="tab" onclick="switchTab('import')">📥 Importar</div>
+  <div class="tab" onclick="switchTab('settings')">⚙️ Config</div>
+</div>
+
+<!-- ═══════════════════ TAB: CONTAR ═══════════════════ -->
+<div id="tab-count" class="view active">
+  <div class="search-box">
+    <input type="search" class="search-input" id="searchInput"
+      placeholder="🔍 Buscar por nombre o código…" 
+      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+      oninput="onSearch()" />
+  </div>
+  <div class="filter-row" id="catFilters"></div>
+  <div id="productList"></div>
+  <div id="loadMore">Cargando más…</div>
+</div>
+
+<!-- ═══════════════════ TAB: PENDIENTES ═══════════════════ -->
+<div id="tab-pending" class="view">
+  <div class="search-box">
+    <input type="search" class="search-input" id="searchPending"
+      placeholder="🔍 Buscar pendientes…"
+      autocomplete="off" oninput="renderPending()" />
+  </div>
+  <div id="pendingList"></div>
+</div>
+
+<!-- ═══════════════════ TAB: LISTOS ═══════════════════ -->
+<div id="tab-done" class="view">
+  <div class="search-box">
+    <input type="search" class="search-input" id="searchDone"
+      placeholder="🔍 Buscar contados…"
+      autocomplete="off" oninput="renderDone()" />
+  </div>
+  <div id="doneList"></div>
+</div>
+
+<!-- ═══════════════════ TAB: RESUMEN ═══════════════════ -->
+<div id="tab-summary" class="view">
+  <div class="summary-grid">
+    <div class="summary-card green">
+      <div class="num" id="sTotalContados">0</div>
+      <div class="lbl">Contados</div>
+    </div>
+    <div class="summary-card yellow">
+      <div class="num" id="sTotalPendientes">0</div>
+      <div class="lbl">Pendientes</div>
+    </div>
+    <div class="summary-card blue">
+      <div class="num" id="sTotalProductos">0</div>
+      <div class="lbl">Total productos</div>
+    </div>
+    <div class="summary-card red">
+      <div class="num" id="sTotalNotas">0</div>
+      <div class="lbl">Con notas</div>
+    </div>
+  </div>
+  <p class="section-title">Por categoría</p>
+  <div id="catSummary"></div>
+  <br>
+  <p class="section-title">Exportar</p>
+  <button class="btn" style="width:100%;margin-bottom:10px" onclick="exportCSV()">📥 Descargar CSV completo</button>
+  <button class="btn secondary" style="width:100%;margin-bottom:10px" onclick="exportPending()">📋 Solo pendientes (CSV)</button>
+  <button class="btn secondary" style="width:100%;margin-bottom:10px" onclick="exportDone()">✅ Solo contados (CSV)</button>
+  <button class="btn secondary" style="width:100%" onclick="exportJSON()">💾 Backup JSON (guardar progreso)</button>
+</div>
+
+<!-- ═══════════════════ TAB: IMPORTAR ═══════════════════ -->
+<div id="tab-import" class="view">
+  <div class="import-area" id="dropArea" onclick="document.getElementById('fileInput').click()" 
+       ondragover="e=>e.preventDefault()" ondrop="handleDrop(event)">
+    <div class="icon">📂</div>
+    <h3>Importar lista de productos</h3>
+    <p>Arrastra un archivo CSV o Excel (.csv, .txt)<br>o toca para seleccionar.<br><br>
+    <b>Columnas esperadas:</b><br>
+    <span class="kbd">codigo</span> <span class="kbd">nombre</span> <span class="kwd">categoria</span> (opcional)</p>
+  </div>
+  <input type="file" id="fileInput" accept=".csv,.txt" onchange="handleFileInput(event)">
+  
+  <div id="importPreview" style="display:none">
+    <p class="section-title" id="importPreviewTitle">Vista previa</p>
+    <div id="importPreviewContent"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn" style="flex:1" onclick="confirmImport()">✅ Confirmar importación</button>
+      <button class="btn secondary" onclick="cancelImport()">✕ Cancelar</button>
+    </div>
+  </div>
+
+  <hr style="border:1px solid var(--border);margin:20px 0">
+  
+  <p class="section-title">Agregar producto manualmente</p>
+  <div class="add-manual-form">
+    <div class="form-row">
+      <input class="form-input" id="manCodigo" placeholder="Código / SKU" style="flex:1">
+      <input class="form-input" id="manCat" placeholder="Categoría" style="flex:1">
+    </div>
+    <input class="form-input" id="manNombre" placeholder="Nombre del producto *">
+    <button class="btn" onclick="addManual()">+ Agregar producto</button>
+  </div>
+
+  <hr style="border:1px solid var(--border);margin:20px 0">
+  <p class="section-title">Restaurar backup</p>
+  <button class="btn secondary" style="width:100%" onclick="document.getElementById('backupInput').click()">📂 Cargar backup JSON</button>
+  <input type="file" id="backupInput" accept=".json" style="display:none" onchange="loadBackup(event)">
+</div>
+
+<!-- ═══════════════════ TAB: CONFIG ═══════════════════ -->
+<div id="tab-settings" class="view">
+  <p class="section-title">Sesión de conteo</p>
+  <div class="settings-row">
+    <div>
+      <label>Nombre del conteo</label>
+      <small id="sessionInfo">Sin nombre</small>
+    </div>
+    <input class="form-input" id="sessionName" placeholder="Ej: Conteo Marzo 2025" style="width:160px;font-size:13px" onchange="saveSessionName()">
+  </div>
+  <div class="settings-row">
+    <div>
+      <label>Auto-guardar</label>
+      <small>Guardar automáticamente en el navegador</small>
+    </div>
+    <button class="toggle on" id="toggleAutoSave" onclick="toggleSetting('autoSave', this)"></button>
+  </div>
+  <div class="settings-row">
+    <div>
+      <label>Vibración al contar</label>
+      <small>Feedback háptico en móvil</small>
+    </div>
+    <button class="toggle on" id="toggleVibrate" onclick="toggleSetting('vibrate', this)"></button>
+  </div>
+  <div class="settings-row">
+    <div>
+      <label>Agrupar por categoría</label>
+      <small>Mostrar secciones en la lista</small>
+    </div>
+    <button class="toggle" id="toggleGroupCat" onclick="toggleSetting('groupCat', this)"></button>
+  </div>
+
+  <br>
+  <p class="section-title">Datos</p>
+  <button class="btn secondary" style="width:100%;margin-bottom:8px" onclick="resetCounts()">🔄 Reiniciar solo conteos (mantener productos)</button>
+  <button class="btn danger" style="width:100%" onclick="clearAll()">🗑️ Borrar TODO y empezar de cero</button>
+
+  <br><br>
+  <p class="section-title">Formato CSV esperado</p>
+  <div style="background:var(--surface2);border-radius:8px;padding:12px;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);line-height:1.8">
+    codigo,nombre,categoria<br>
+    SKU001,Silla Ejecutiva,Mobiliario<br>
+    SKU002,Monitor 24",Tecnología<br>
+    SKU003,Teclado Mecánico,Tecnología
+  </div>
+  <br>
+  <button class="btn secondary" style="width:100%" onclick="downloadSampleCSV()">📥 Descargar CSV de ejemplo</button>
+</div>
+
+<!-- ═══════════════════ MODAL CONTEO ═══════════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title" id="modalCode">—</div>
+    <div class="modal-prod-name" id="modalName">Producto</div>
+    <div class="modal-count-row">
+      <button class="modal-btn-count minus" onclick="modalDelta(-1)">−</button>
+      <div class="modal-count-num" id="modalCountNum">0</div>
+      <button class="modal-btn-count plus" onclick="modalDelta(1)">+</button>
+    </div>
+    <div class="modal-input-row">
+      <input type="number" class="modal-num-input" id="modalNumInput" placeholder="Teclear cantidad exacta" min="0"
+        oninput="modalInputChange()">
+    </div>
+    <textarea class="modal-note" id="modalNote" rows="2" placeholder="Nota (ubicación, discrepancia…)"></textarea>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="closeModalDirect()">Cancelar</button>
+      <button class="btn" onclick="saveModal()">Guardar ✓</button>
+    </div>
+  </div>
+</div>
+
+<button class="fab" onclick="switchTab('import');document.getElementById('searchInput').focus()">+</button>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════
+let products = []; // {id, codigo, nombre, categoria, count, nota, updatedAt}
+let pendingImport = [];
+let settings = { autoSave: true, vibrate: true, groupCat: false };
+let searchQ = '';
+let activeCatFilter = 'ALL';
+let activeTab = 'count';
+let displayedItems = 50;
+let currentModalId = null;
+let modalCount = 0;
+
+const LS_KEY = 'ikrox_inventory_v2';
+
+// ══════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════
+function init() {
+  loadFromStorage();
+  applySettings();
+  renderAll();
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      products = data.products || [];
+      settings = { ...settings, ...(data.settings || {}) };
+      if (data.sessionName) {
+        document.getElementById('sessionName').value = data.sessionName;
+        document.getElementById('sessionInfo').textContent = data.sessionName;
+      }
+    }
+  } catch(e) { console.warn('Error cargando datos', e); }
+}
+
+function saveToStorage() {
+  if (!settings.autoSave) return;
+  try {
+    const data = {
+      products,
+      settings,
+      sessionName: document.getElementById('sessionName').value,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem(LS_KEY, JSON.stringify(data));
+  } catch(e) { showToast('⚠️ Error guardando'); }
+}
+
+function applySettings() {
+  setToggle('toggleAutoSave', settings.autoSave);
+  setToggle('toggleVibrate', settings.vibrate);
+  setToggle('toggleGroupCat', settings.groupCat);
+}
+
+// ══════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const tabs = ['count','pending','done','summary','import','settings'];
+    t.classList.toggle('active', tabs[i] === name);
+  });
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  activeTab = name;
+  displayedItems = 50;
+  if (name === 'count') renderCount();
+  if (name === 'pending') renderPending();
+  if (name === 'done') renderDone();
+  if (name === 'summary') renderSummary();
+}
+
+// ══════════════════════════════════════
+//  RENDER HELPERS
+// ══════════════════════════════════════
+function renderAll() {
+  updateHeader();
+  renderCount();
+  if (activeTab === 'pending') renderPending();
+  if (activeTab === 'done') renderDone();
+  if (activeTab === 'summary') renderSummary();
+}
+
+function updateHeader() {
+  const counted = products.filter(p => p.count !== null && p.count !== undefined && p.count !== '').length;
+  const total = products.length;
+  const pct = total > 0 ? Math.round(counted/total*100) : 0;
+  document.getElementById('hCounted').textContent = counted;
+  document.getElementById('hTotal').textContent = total;
+  document.getElementById('hPct').textContent = pct+'%';
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('progressLeft').textContent = `${counted} de ${total} contados`;
+  document.getElementById('progressPct').textContent = pct+'%';
+}
+
+function getFilteredProducts(list, query) {
+  if (!query) return list;
+  const q = query.toLowerCase().trim();
+  return list.filter(p =>
+    p.nombre.toLowerCase().includes(q) ||
+    (p.codigo && p.codigo.toLowerCase().includes(q)) ||
+    (p.categoria && p.categoria.toLowerCase().includes(q))
+  );
+}
+
+function isCounted(p) {
+  return p.count !== null && p.count !== undefined && p.count !== '';
+}
+
+function productCardHTML(p, showBadge=true) {
+  const counted = isCounted(p);
+  const countVal = counted ? Number(p.count) : 0;
+  return `
+    <div class="product-card ${counted?'counted':''}" onclick="openModal('${p.id}')">
+      <div class="prod-info">
+        <div class="prod-name">${escH(p.nombre)}</div>
+        <div class="prod-code">${escH(p.codigo||'—')}</div>
+        ${p.categoria ? `<div class="prod-cat">${escH(p.categoria)}</div>` : ''}
+        ${p.nota ? `<div style="font-size:11px;color:var(--warn);margin-top:4px">📝 ${escH(p.nota.substring(0,40))}</div>` : ''}
+      </div>
+      <div class="prod-count-area">
+        ${counted
+          ? `<div class="count-display has-count" onclick="event.stopPropagation();quickDelta('${p.id}',-1)">${countVal}</div>
+             <button class="count-btn btn-plus" onclick="event.stopPropagation();quickDelta('${p.id}',1)">+</button>`
+          : `<button class="count-btn btn-minus" onclick="event.stopPropagation();quickDelta('${p.id}',-1)">−</button>
+             <div class="count-display">—</div>
+             <button class="count-btn btn-plus" onclick="event.stopPropagation();quickDelta('${p.id}',1)">+</button>`
+        }
+      </div>
+    </div>`;
+}
+
+function renderCount() {
+  const q = (document.getElementById('searchInput')||{}).value || '';
+  let list = products;
+  if (activeCatFilter !== 'ALL') list = list.filter(p => p.categoria === activeCatFilter);
+  list = getFilteredProducts(list, q);
+
+  // Render category filters
+  const cats = [...new Set(products.map(p=>p.categoria).filter(Boolean))].sort();
+  const filterEl = document.getElementById('catFilters');
+  filterEl.innerHTML = `<div class="filter-chip ${activeCatFilter==='ALL'?'active':''}" onclick="setCatFilter('ALL')">Todas</div>` +
+    cats.map(c => `<div class="filter-chip ${activeCatFilter===c?'active':''}" onclick="setCatFilter('${escH(c)}')">${escH(c)}</div>`).join('');
+
+  const el = document.getElementById('productList');
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="icon">📦</div><p>No se encontraron productos.<br>Ve a <b>Importar</b> para agregar tu lista.</p></div>`;
+    return;
+  }
+
+  const slice = list.slice(0, displayedItems);
+  let html = '';
+  if (settings.groupCat) {
+    const byCat = {};
+    slice.forEach(p => {
+      const k = p.categoria || '(Sin categoría)';
+      if (!byCat[k]) byCat[k] = [];
+      byCat[k].push(p);
+    });
+    for (const cat in byCat) {
+      const done = byCat[cat].filter(isCounted).length;
+      html += `<div class="section-header">${escH(cat)}<span>${done}/${byCat[cat].length}</span></div>`;
+      html += byCat[cat].map(p => productCardHTML(p)).join('');
+    }
+  } else {
+    html = slice.map(p => productCardHTML(p)).join('');
+  }
+  el.innerHTML = html;
+
+  const loadEl = document.getElementById('loadMore');
+  if (list.length > displayedItems) {
+    loadEl.style.display = 'block';
+    loadEl.textContent = `Mostrando ${displayedItems} de ${list.length} — toca para ver más`;
+    loadEl.onclick = () => { displayedItems += 50; renderCount(); };
+  } else {
+    loadEl.style.display = 'none';
+  }
+}
+
+function renderPending() {
+  const q = (document.getElementById('searchPending')||{}).value || '';
+  let list = products.filter(p => !isCounted(p));
+  list = getFilteredProducts(list, q);
+  const el = document.getElementById('pendingList');
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="icon">🎉</div><p>¡No hay productos pendientes!</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(p => productCardHTML(p)).join('');
+}
+
+function renderDone() {
+  const q = (document.getElementById('searchDone')||{}).value || '';
+  let list = products.filter(p => isCounted(p));
+  list = getFilteredProducts(list, q);
+  const el = document.getElementById('doneList');
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="icon">📋</div><p>Aún no has contado ningún producto.</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(p => productCardHTML(p)).join('');
+}
+
+function renderSummary() {
+  const counted = products.filter(isCounted);
+  const pending = products.filter(p => !isCounted(p));
+  const withNotes = products.filter(p => p.nota && p.nota.trim());
+  document.getElementById('sTotalContados').textContent = counted.length;
+  document.getElementById('sTotalPendientes').textContent = pending.length;
+  document.getElementById('sTotalProductos').textContent = products.length;
+  document.getElementById('sTotalNotas').textContent = withNotes.length;
+
+  // By category
+  const cats = [...new Set(products.map(p=>p.categoria||'(Sin cat)'))].sort();
+  const html = cats.map(cat => {
+    const catProds = products.filter(p=>(p.categoria||'(Sin cat)')===cat);
+    const catDone = catProds.filter(isCounted).length;
+    const pct = catProds.length > 0 ? Math.round(catDone/catProds.length*100) : 0;
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-weight:600;font-size:13px">${escH(cat)}</span>
+        <span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--muted)">${catDone}/${catProds.length} · <b style="color:var(--accent)">${pct}%</b></span>
+      </div>
+      <div style="background:var(--surface2);border-radius:4px;height:6px;overflow:hidden">
+        <div style="width:${pct}%;background:var(--accent);height:100%;border-radius:4px;transition:width 0.4s"></div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('catSummary').innerHTML = html || '<p style="color:var(--muted);font-size:13px">Sin categorías</p>';
+}
+
+// ══════════════════════════════════════
+//  SEARCH & FILTERS
+// ══════════════════════════════════════
+function onSearch() { displayedItems = 50; renderCount(); }
+function setCatFilter(cat) { activeCatFilter = cat; displayedItems = 50; renderCount(); }
+
+// ══════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════
+function openModal(id) {
+  const p = products.find(x=>x.id===id);
+  if (!p) return;
+  currentModalId = id;
+  modalCount = isCounted(p) ? Number(p.count) : 0;
+  document.getElementById('modalCode').textContent = p.codigo || '—';
+  document.getElementById('modalName').textContent = p.nombre;
+  document.getElementById('modalCountNum').textContent = modalCount;
+  document.getElementById('modalNumInput').value = isCounted(p) ? p.count : '';
+  document.getElementById('modalNote').value = p.nota || '';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modalOverlay')) return;
+  closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  currentModalId = null;
+}
+
+function modalDelta(d) {
+  modalCount = Math.max(0, modalCount + d);
+  document.getElementById('modalCountNum').textContent = modalCount;
+  document.getElementById('modalNumInput').value = modalCount;
+  vibrate();
+}
+
+function modalInputChange() {
+  const v = parseInt(document.getElementById('modalNumInput').value);
+  if (!isNaN(v) && v >= 0) {
+    modalCount = v;
+    document.getElementById('modalCountNum').textContent = modalCount;
+  }
+}
+
+function saveModal() {
+  if (!currentModalId) return;
+  const p = products.find(x=>x.id===currentModalId);
+  if (!p) return;
+  p.count = modalCount;
+  p.nota = document.getElementById('modalNote').value.trim();
+  p.updatedAt = new Date().toISOString();
+  saveToStorage();
+  closeModalDirect();
+  renderAll();
+  showToast(`✓ ${p.nombre.substring(0,25)} → ${modalCount}`);
+  vibrate();
+}
+
+// ══════════════════════════════════════
+//  QUICK DELTA (inline +/-)
+// ══════════════════════════════════════
+function quickDelta(id, delta) {
+  const p = products.find(x=>x.id===id);
+  if (!p) return;
+  const current = isCounted(p) ? Number(p.count) : 0;
+  p.count = Math.max(0, current + delta);
+  p.updatedAt = new Date().toISOString();
+  saveToStorage();
+  renderAll();
+  vibrate();
+}
+
+// ══════════════════════════════════════
+//  IMPORT CSV
+// ══════════════════════════════════════
+function handleFileInput(e) {
+  const file = e.target.files[0];
+  if (file) processFile(file);
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (file) processFile(file);
+}
+
+function processFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target.result;
+    const parsed = parseCSV(text);
+    if (parsed.length === 0) { showToast('⚠️ No se encontraron productos'); return; }
+    pendingImport = parsed;
+    showImportPreview(parsed);
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+  
+  // Detect delimiter
+  const delimiters = [',', ';', '\t', '|'];
+  let delim = ',';
+  let maxCols = 0;
+  delimiters.forEach(d => {
+    const cols = lines[0].split(d).length;
+    if (cols > maxCols) { maxCols = cols; delim = d; }
+  });
+  
+  const headers = lines[0].split(delim).map(h => h.trim().toLowerCase().replace(/["']/g,'').replace(/\s+/g,'_'));
+  
+  // Find columns
+  const findCol = (...names) => {
+    for (const name of names) {
+      const idx = headers.findIndex(h => h.includes(name));
+      if (idx >= 0) return idx;
+    }
+    return -1;
+  };
+  
+  const iNombre = findCol('nombre','name','descripcion','description','producto','product','item','articulo');
+  const iCodigo = findCol('codigo','code','sku','clave','id','ref');
+  const iCat = findCol('categoria','category','cat','tipo','type','departamento');
+  
+  if (iNombre < 0) {
+    // If no header match, assume: col0=codigo, col1=nombre, col2=categoria
+    return lines.slice(1).map((line, i) => {
+      const cols = line.split(delim).map(c => c.trim().replace(/^["']|["']$/g,''));
+      if (!cols[0] && !cols[1]) return null;
+      return { id: genId(), codigo: cols[0]||'', nombre: cols[1]||cols[0], categoria: cols[2]||'', count: null, nota: '' };
+    }).filter(Boolean);
+  }
+  
+  return lines.slice(1).map((line, i) => {
+    const cols = line.split(delim).map(c => c.trim().replace(/^["']|["']$/g,''));
+    const nombre = iNombre >= 0 ? cols[iNombre] : `Producto ${i+1}`;
+    if (!nombre) return null;
+    return {
+      id: genId(),
+      codigo: iCodigo >= 0 ? (cols[iCodigo]||'') : `SKU${String(i+1).padStart(4,'0')}`,
+      nombre,
+      categoria: iCat >= 0 ? (cols[iCat]||'') : '',
+      count: null,
+      nota: ''
+    };
+  }).filter(Boolean);
+}
+
+function showImportPreview(parsed) {
+  const el = document.getElementById('importPreview');
+  el.style.display = 'block';
+  document.getElementById('importPreviewTitle').textContent = `Vista previa — ${parsed.length} productos detectados`;
+  const sample = parsed.slice(0, 5);
+  document.getElementById('importPreviewContent').innerHTML = 
+    `<div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13px;color:var(--muted)">` +
+    sample.map(p => `<div style="padding:4px 0;border-bottom:1px solid var(--border)">${escH(p.codigo)} — ${escH(p.nombre)} ${p.categoria?'('+escH(p.categoria)+')':''}</div>`).join('') +
+    (parsed.length > 5 ? `<div style="padding-top:8px">… y ${parsed.length-5} más</div>` : '') +
+    `</div>`;
+  el.scrollIntoView({ behavior: 'smooth' });
+}
+
+function confirmImport() {
+  if (!pendingImport.length) return;
+  
+  // Merge: keep existing counts if code matches
+  const existing = {};
+  products.forEach(p => { if (p.codigo) existing[p.codigo] = p; });
+  
+  pendingImport.forEach(p => {
+    if (p.codigo && existing[p.codigo]) {
+      // Update name/category but keep count
+      existing[p.codigo].nombre = p.nombre;
+      existing[p.codigo].categoria = p.categoria;
+    } else {
+      products.push(p);
+    }
+  });
+  
+  pendingImport = [];
+  document.getElementById('importPreview').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  saveToStorage();
+  renderAll();
+  showToast(`✅ ${products.length} productos cargados`);
+  switchTab('count');
+}
+
+function cancelImport() {
+  pendingImport = [];
+  document.getElementById('importPreview').style.display = 'none';
+}
+
+function addManual() {
+  const nombre = document.getElementById('manNombre').value.trim();
+  if (!nombre) { showToast('⚠️ El nombre es requerido'); return; }
+  products.push({
+    id: genId(),
+    codigo: document.getElementById('manCodigo').value.trim(),
+    nombre,
+    categoria: document.getElementById('manCat').value.trim(),
+    count: null,
+    nota: ''
+  });
+  document.getElementById('manNombre').value = '';
+  document.getElementById('manCodigo').value = '';
+  document.getElementById('manCat').value = '';
+  saveToStorage();
+  renderAll();
+  showToast('✅ Producto agregado');
+}
+
+// ══════════════════════════════════════
+//  EXPORT
+// ══════════════════════════════════════
+function exportCSV() {
+  const rows = [['Codigo','Nombre','Categoria','Contado','Cantidad','Nota','Actualizado']];
+  products.forEach(p => {
+    rows.push([p.codigo||'', p.nombre, p.categoria||'', isCounted(p)?'SI':'NO', isCounted(p)?p.count:'', p.nota||'', p.updatedAt||'']);
+  });
+  downloadCSV(rows, 'inventario_completo');
+}
+
+function exportPending() {
+  const rows = [['Codigo','Nombre','Categoria']];
+  products.filter(p => !isCounted(p)).forEach(p => {
+    rows.push([p.codigo||'', p.nombre, p.categoria||'']);
+  });
+  downloadCSV(rows, 'inventario_pendientes');
+}
+
+function exportDone() {
+  const rows = [['Codigo','Nombre','Categoria','Cantidad','Nota']];
+  products.filter(isCounted).forEach(p => {
+    rows.push([p.codigo||'', p.nombre, p.categoria||'', p.count, p.nota||'']);
+  });
+  downloadCSV(rows, 'inventario_contados');
+}
+
+function exportJSON() {
+  const data = JSON.stringify({ products, settings, savedAt: new Date().toISOString() }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `backup_inventario_${dateStr()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('💾 Backup descargado');
+}
+
+function downloadCSV(rows, name) {
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${name}_${dateStr()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📥 CSV descargado');
+}
+
+function loadBackup(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.products) {
+        products = data.products;
+        if (data.settings) settings = { ...settings, ...data.settings };
+        saveToStorage();
+        renderAll();
+        showToast('✅ Backup restaurado');
+        switchTab('count');
+      } else { showToast('⚠️ Archivo no válido'); }
+    } catch(err) { showToast('⚠️ Error leyendo backup'); }
+  };
+  reader.readAsText(file);
+}
+
+function downloadSampleCSV() {
+  const rows = [['codigo','nombre','categoria'],['SKU001','Silla Ejecutiva Negra','Mobiliario'],['SKU002','Monitor 24 pulgadas','Tecnologia'],['SKU003','Teclado Mecanico RGB','Tecnologia'],['SKU004','Escritorio de Madera','Mobiliario']];
+  downloadCSV(rows, 'ejemplo_inventario');
+}
+
+// ══════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════
+function toggleSetting(key, btn) {
+  settings[key] = !settings[key];
+  setToggle(btn.id, settings[key]);
+  if (key === 'groupCat') renderCount();
+  saveToStorage();
+}
+
+function setToggle(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('on', val);
+}
+
+function saveSessionName() {
+  const name = document.getElementById('sessionName').value;
+  document.getElementById('sessionInfo').textContent = name || 'Sin nombre';
+  saveToStorage();
+}
+
+function resetCounts() {
+  if (!confirm(`¿Reiniciar todos los conteos? Se mantendrán los ${products.length} productos pero se borrarán las cantidades.`)) return;
+  products.forEach(p => { p.count = null; p.nota = ''; p.updatedAt = null; });
+  saveToStorage();
+  renderAll();
+  showToast('🔄 Conteos reiniciados');
+}
+
+function clearAll() {
+  if (!confirm('¿Borrar TODO? Esta acción no se puede deshacer.')) return;
+  products = [];
+  localStorage.removeItem(LS_KEY);
+  renderAll();
+  showToast('🗑️ Datos borrados');
+}
+
+// ══════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function vibrate() {
+  if (settings.vibrate && navigator.vibrate) navigator.vibrate(30);
+}
+
+function escH(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function genId() {
+  return Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+}
+
+function dateStr() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModalDirect();
+  if (e.key === 'Enter' && currentModalId) saveModal();
+  if ((e.key === '+' || e.key === '=') && currentModalId) modalDelta(1);
+  if (e.key === '-' && currentModalId) modalDelta(-1);
+});
+
+// ══════════════════════════════════════
+//  START
+// ══════════════════════════════════════
+init();
+</script>
+</body>
+</html>
