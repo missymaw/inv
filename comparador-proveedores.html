@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>ResurtidoExpress — Comparador de Proveedores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   ResurtidoExpress — Comparador de Proveedores v1.0
+   © Mawddi / iKROX Technologies 2026
+   ================================================================ */
+
+:root {
+  --bg:       #0a0b0f;
+  --bg2:      #12141a;
+  --bg3:      #1a1d26;
+  --bg4:      #222633;
+  --border:   #2a2e3a;
+  --border2:  #363b4a;
+  --text:     #e8eaf0;
+  --text2:    #9a9eb0;
+  --text3:    #5c6178;
+  --accent:   #00d4aa;
+  --accent2:  #00b894;
+  --warn:     #fdcb6e;
+  --danger:   #ff6b6b;
+  --info:     #74b9ff;
+  --purple:   #a29bfe;
+  --orange:   #f39c12;
+  --cheapest: #00d4aa;
+  --font:     'Outfit', sans-serif;
+  --mono:     'JetBrains Mono', monospace;
+  --r:        8px;
+  --r2:       12px;
+  --shadow:   0 4px 24px rgba(0,0,0,.4);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--text); font-family: var(--font);
+  min-height: 100vh; overflow-x: hidden;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0,212,170,.04), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(116,185,255,.03), transparent);
+}
+a { color: var(--accent); text-decoration: none; }
+button { font-family: var(--font); cursor: pointer; border: none; }
+input, select, textarea { font-family: var(--font); }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ---- LAYOUT ---- */
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ---- HEADER ---- */
+.header {
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  padding: 0 24px; height: 60px; display: flex; align-items: center;
+  gap: 16px; position: sticky; top: 0; z-index: 100;
+}
+.header-logo {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.header-logo .icon {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: var(--bg);
+}
+.header-logo .title {
+  font-weight: 700; font-size: 16px; letter-spacing: -0.3px;
+}
+.header-logo .title span { color: var(--accent); }
+.header-logo .badge {
+  font-size: 10px; background: var(--bg4); color: var(--text2);
+  padding: 2px 6px; border-radius: 4px; font-weight: 500;
+}
+.header-actions {
+  display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: var(--r); font-size: 13px;
+  font-weight: 500; transition: all .15s ease;
+}
+.btn-primary {
+  background: var(--accent); color: var(--bg); font-weight: 600;
+}
+.btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+.btn-secondary {
+  background: var(--bg4); color: var(--text); border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: var(--border); border-color: var(--border2); }
+.btn-danger { background: rgba(255,107,107,.15); color: var(--danger); }
+.btn-danger:hover { background: rgba(255,107,107,.25); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn svg { width: 16px; height: 16px; }
+
+/* ---- STATS BAR ---- */
+.stats-bar {
+  display: flex; gap: 12px; padding: 16px 24px;
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  overflow-x: auto; flex-wrap: nowrap;
+}
+.stat-card {
+  flex: 1; min-width: 140px; background: var(--bg3);
+  border: 1px solid var(--border); border-radius: var(--r2);
+  padding: 12px 16px; position: relative; overflow: hidden;
+}
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.stat-card.s-total::before { background: var(--info); }
+.stat-card.s-suppliers::before { background: var(--purple); }
+.stat-card.s-reorder::before { background: var(--warn); }
+.stat-card.s-critical::before { background: var(--danger); }
+.stat-card.s-cheapest::before { background: var(--cheapest); }
+.stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .8px; font-weight: 600; }
+.stat-value { font-family: var(--mono); font-size: 24px; font-weight: 700; margin-top: 4px; }
+.stat-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.s-total .stat-value { color: var(--info); }
+.s-suppliers .stat-value { color: var(--purple); }
+.s-reorder .stat-value { color: var(--warn); }
+.s-critical .stat-value { color: var(--danger); }
+.s-cheapest .stat-value { color: var(--cheapest); }
+
+/* ---- TOOLBAR ---- */
+.toolbar {
+  display: flex; gap: 10px; padding: 12px 24px; align-items: center;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.search-box {
+  flex: 1; min-width: 200px; max-width: 400px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--r); display: flex; align-items: center;
+  gap: 8px; padding: 0 12px; height: 38px; transition: border-color .2s;
+}
+.search-box:focus-within { border-color: var(--accent); }
+.search-box svg { width: 16px; height: 16px; color: var(--text3); flex-shrink: 0; }
+.search-box input {
+  flex: 1; background: none; border: none; color: var(--text);
+  font-size: 13px; outline: none;
+}
+.search-box input::placeholder { color: var(--text3); }
+.filter-select {
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); padding: 0 12px; height: 38px;
+  border-radius: var(--r); font-size: 13px; outline: none;
+  cursor: pointer; min-width: 130px;
+}
+.filter-select:focus { border-color: var(--accent); }
+.filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-chip {
+  padding: 6px 12px; border-radius: 100px; font-size: 12px;
+  font-weight: 500; cursor: pointer; transition: all .15s;
+  border: 1px solid var(--border); background: var(--bg3); color: var(--text2);
+}
+.filter-chip:hover { border-color: var(--accent); color: var(--text); }
+.filter-chip.active { background: rgba(0,212,170,.12); border-color: var(--accent); color: var(--accent); }
+.toolbar-right { display: flex; gap: 8px; margin-left: auto; }
+
+/* ---- MAIN TABLE ---- */
+.table-wrap {
+  flex: 1; overflow: auto; padding: 0 24px 24px;
+}
+.data-table {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  font-size: 13px; margin-top: 12px;
+}
+.data-table thead { position: sticky; top: 0; z-index: 10; }
+.data-table th {
+  background: var(--bg3); color: var(--text2); font-weight: 600;
+  font-size: 11px; text-transform: uppercase; letter-spacing: .6px;
+  padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border);
+  white-space: nowrap; cursor: pointer; user-select: none;
+  position: relative;
+}
+.data-table th:hover { color: var(--text); }
+.data-table th.sorted-asc::after,
+.data-table th.sorted-desc::after {
+  content: ''; display: inline-block; margin-left: 4px;
+  width: 0; height: 0;
+  border-left: 4px solid transparent; border-right: 4px solid transparent;
+}
+.data-table th.sorted-asc::after { border-bottom: 5px solid var(--accent); }
+.data-table th.sorted-desc::after { border-top: 5px solid var(--accent); }
+
+.data-table td {
+  padding: 10px 12px; border-bottom: 1px solid var(--border);
+  vertical-align: middle; transition: background .1s;
+}
+.data-table tr:hover td { background: rgba(255,255,255,.02); }
+.data-table .col-product { min-width: 220px; }
+.data-table .col-ean { font-family: var(--mono); font-size: 12px; color: var(--text2); white-space: nowrap; }
+.data-table .col-stock { text-align: center; white-space: nowrap; }
+.data-table .col-price {
+  font-family: var(--mono); text-align: right; white-space: nowrap;
+  min-width: 100px;
+}
+
+/* Product name styling */
+.product-name { font-weight: 500; line-height: 1.3; }
+.product-category { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* Stock badges */
+.stock-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 100px; font-size: 12px;
+  font-family: var(--mono); font-weight: 600;
+}
+.stock-ok { background: rgba(0,212,170,.1); color: var(--accent); }
+.stock-low { background: rgba(253,203,110,.1); color: var(--warn); }
+.stock-critical { background: rgba(255,107,107,.1); color: var(--danger); }
+.stock-out { background: rgba(255,107,107,.2); color: var(--danger); font-weight: 700; }
+
+/* Price cells */
+.price-cell { position: relative; }
+.price-cell.cheapest {
+  color: var(--cheapest); font-weight: 700;
+}
+.price-cell.cheapest::before {
+  content: '★'; position: absolute; left: -2px; top: 50%;
+  transform: translateY(-50%); font-size: 10px; color: var(--cheapest);
+}
+.price-cell.no-stock { color: var(--text3); text-decoration: line-through; opacity: .5; }
+.price-cell.no-price { color: var(--text3); font-style: italic; }
+.price-discount { font-size: 10px; color: var(--text3); display: block; }
+
+/* Reorder indicator */
+.reorder-indicator {
+  display: flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.reorder-qty {
+  font-family: var(--mono); font-weight: 700; font-size: 14px;
+}
+.reorder-needed { color: var(--warn); }
+.reorder-urgent { color: var(--danger); }
+.reorder-ok { color: var(--text3); }
+
+/* ---- EMPTY STATE ---- */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 80px 24px; text-align: center;
+  color: var(--text2);
+}
+.empty-state .icon {
+  width: 80px; height: 80px; border-radius: 20px;
+  background: var(--bg3); border: 2px dashed var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; margin-bottom: 20px;
+}
+.empty-state h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; }
+.empty-state p { font-size: 14px; max-width: 460px; line-height: 1.6; margin-bottom: 20px; }
+
+/* ---- MODAL ---- */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.7);
+  backdrop-filter: blur(4px); z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.modal-overlay.active { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r2); width: 100%; max-width: 640px;
+  max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow);
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+}
+.modal-header h2 { font-size: 16px; font-weight: 700; }
+.modal-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--bg4); color: var(--text2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; transition: all .15s;
+}
+.modal-close:hover { background: var(--danger); color: #fff; }
+.modal-body { padding: 24px; }
+.modal-footer {
+  padding: 16px 24px; border-top: 1px solid var(--border);
+  display: flex; gap: 8px; justify-content: flex-end;
+}
+
+/* Form elements in modal */
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block; font-size: 12px; font-weight: 600;
+  color: var(--text2); margin-bottom: 6px; text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.form-input {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); padding: 10px 12px; border-radius: var(--r);
+  font-size: 13px; outline: none; transition: border-color .2s;
+}
+.form-input:focus { border-color: var(--accent); }
+.form-select {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); padding: 10px 12px; border-radius: var(--r);
+  font-size: 13px; outline: none; cursor: pointer;
+}
+.form-select:focus { border-color: var(--accent); }
+
+/* Mapping preview */
+.mapping-preview {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--r); overflow: auto; max-height: 200px;
+  margin: 12px 0;
+}
+.mapping-preview table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mapping-preview th {
+  background: var(--bg3); padding: 6px 10px; text-align: left;
+  font-weight: 600; color: var(--text2); position: sticky; top: 0;
+}
+.mapping-preview td { padding: 5px 10px; border-top: 1px solid var(--border); color: var(--text2); }
+.mapping-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+
+/* Upload zone */
+.upload-zone {
+  border: 2px dashed var(--border); border-radius: var(--r2);
+  padding: 40px; text-align: center; cursor: pointer;
+  transition: all .2s; background: var(--bg);
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--accent); background: rgba(0,212,170,.03);
+}
+.upload-zone .uz-icon { font-size: 36px; margin-bottom: 12px; }
+.upload-zone .uz-text { font-size: 14px; color: var(--text2); }
+.upload-zone .uz-hint { font-size: 12px; color: var(--text3); margin-top: 6px; }
+
+/* File input hidden */
+.file-input { display: none; }
+
+/* ---- TOAST ---- */
+.toast-container {
+  position: fixed; bottom: 24px; right: 24px; z-index: 300;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 12px 16px; min-width: 280px;
+  box-shadow: var(--shadow); display: flex; align-items: center; gap: 10px;
+  animation: slideIn .3s ease;
+  font-size: 13px;
+}
+.toast.success { border-left: 3px solid var(--accent); }
+.toast.error { border-left: 3px solid var(--danger); }
+.toast.warning { border-left: 3px solid var(--warn); }
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ---- DETAIL PANEL (product click) ---- */
+.detail-panel {
+  position: fixed; right: -480px; top: 0; bottom: 0; width: 480px;
+  background: var(--bg2); border-left: 1px solid var(--border);
+  z-index: 150; transition: right .3s ease; overflow-y: auto;
+  box-shadow: -8px 0 32px rgba(0,0,0,.3);
+}
+.detail-panel.open { right: 0; }
+.detail-header {
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.detail-header h3 { font-size: 16px; line-height: 1.4; }
+.detail-body { padding: 24px; }
+.detail-section { margin-bottom: 20px; }
+.detail-section-title {
+  font-size: 11px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .8px; margin-bottom: 10px;
+}
+.detail-row {
+  display: flex; justify-content: space-between; padding: 8px 0;
+  border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.detail-row .label { color: var(--text2); }
+.detail-row .value { font-family: var(--mono); font-weight: 600; }
+.supplier-rank {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  background: var(--bg3); border-radius: var(--r); margin-bottom: 6px;
+  border: 1px solid var(--border);
+}
+.supplier-rank.rank-1 { border-color: var(--cheapest); background: rgba(0,212,170,.06); }
+.supplier-rank .rank-num {
+  width: 24px; height: 24px; border-radius: 6px;
+  background: var(--bg4); display: flex; align-items: center;
+  justify-content: center; font-size: 12px; font-weight: 700;
+  flex-shrink: 0;
+}
+.supplier-rank.rank-1 .rank-num { background: var(--cheapest); color: var(--bg); }
+.supplier-rank .rank-info { flex: 1; }
+.supplier-rank .rank-name { font-weight: 600; font-size: 13px; }
+.supplier-rank .rank-details { font-size: 11px; color: var(--text2); }
+.supplier-rank .rank-price { font-family: var(--mono); font-size: 15px; font-weight: 700; }
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 900px) {
+  .header { padding: 0 12px; gap: 10px; }
+  .header-logo .title { display: none; }
+  .stats-bar { padding: 12px; gap: 8px; }
+  .stat-card { min-width: 110px; padding: 10px 12px; }
+  .stat-value { font-size: 20px; }
+  .toolbar { padding: 10px 12px; }
+  .table-wrap { padding: 0 12px 12px; }
+  .data-table { font-size: 12px; }
+  .data-table th, .data-table td { padding: 8px 8px; }
+  .detail-panel { width: 100%; right: -100%; }
+  .mapping-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .header-actions .btn span { display: none; }
+  .filter-select { min-width: 100px; }
+}
+
+/* Print */
+@media print {
+  .header, .toolbar, .stats-bar { position: static; }
+  .modal-overlay, .detail-panel, .toast-container { display: none !important; }
+  body { background: #fff; color: #000; }
+  .data-table th { background: #eee; color: #333; }
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-logo">
+      <div class="icon">Rx</div>
+      <div class="title">Resurtido<span>Express</span></div>
+      <div class="badge">v1.0</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" onclick="openUploadModal('inventory')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span>Inventario SAV</span>
+      </button>
+      <button class="btn btn-primary" onclick="openUploadModal('prices')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>Lista de Precios</span>
+      </button>
+      <button class="btn btn-secondary" onclick="exportData()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Exportar</span>
+      </button>
+      <button class="btn btn-danger btn-sm" onclick="clearAllData()" title="Limpiar datos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat-card s-total">
+      <div class="stat-label">Productos</div>
+      <div class="stat-value" id="statProducts">0</div>
+      <div class="stat-sub" id="statProductsSub">Sin datos</div>
+    </div>
+    <div class="stat-card s-suppliers">
+      <div class="stat-label">Proveedores</div>
+      <div class="stat-value" id="statSuppliers">0</div>
+      <div class="stat-sub" id="statSuppliersSub">Sin listas</div>
+    </div>
+    <div class="stat-card s-reorder">
+      <div class="stat-label">Necesitan resurtido</div>
+      <div class="stat-value" id="statReorder">0</div>
+      <div class="stat-sub" id="statReorderSub">—</div>
+    </div>
+    <div class="stat-card s-critical">
+      <div class="stat-label">Sin stock</div>
+      <div class="stat-value" id="statCritical">0</div>
+      <div class="stat-sub" id="statCriticalSub">—</div>
+    </div>
+    <div class="stat-card s-cheapest">
+      <div class="stat-label">Ahorro posible</div>
+      <div class="stat-value" id="statSavings">$0</div>
+      <div class="stat-sub" id="statSavingsSub">vs proveedor actual</div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Buscar producto, EAN, clave..." oninput="applyFilters()">
+    </div>
+    <select class="filter-select" id="filterSupplier" onchange="applyFilters()">
+      <option value="">Todos los proveedores</option>
+    </select>
+    <select class="filter-select" id="filterCategory" onchange="applyFilters()">
+      <option value="">Todas las categorías</option>
+    </select>
+    <div class="filter-group">
+      <div class="filter-chip active" data-filter="all" onclick="setStockFilter(this)">Todos</div>
+      <div class="filter-chip" data-filter="reorder" onclick="setStockFilter(this)">Resurtir</div>
+      <div class="filter-chip" data-filter="critical" onclick="setStockFilter(this)">Sin stock</div>
+      <div class="filter-chip" data-filter="ok" onclick="setStockFilter(this)">OK</div>
+    </div>
+    <div class="toolbar-right">
+      <span style="font-size:12px;color:var(--text3)" id="resultCount"></span>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="table-wrap" id="tableWrap">
+    <!-- Empty state shown when no data -->
+    <div class="empty-state" id="emptyState">
+      <div class="icon">📦</div>
+      <h3>Sin datos cargados</h3>
+      <p>Carga tu inventario desde un CSV exportado de SAV y las listas de precios de tus proveedores para comparar y generar pedidos de resurtido.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <button class="btn btn-primary" onclick="openUploadModal('inventory')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Cargar Inventario
+        </button>
+        <button class="btn btn-secondary" onclick="openUploadModal('prices')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Cargar Lista de Precios
+        </button>
+      </div>
+    </div>
+
+    <!-- Data table (hidden until data loaded) -->
+    <table class="data-table" id="dataTable" style="display:none">
+      <thead>
+        <tr id="tableHeader">
+          <!-- Dynamic headers -->
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <!-- Dynamic rows -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="uploadModalTitle">Cargar archivo</h2>
+      <button class="modal-close" onclick="closeModal('uploadModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <!-- Step 1: File upload -->
+      <div id="uploadStep1">
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+          <div class="uz-icon">📄</div>
+          <div class="uz-text">Arrastra tu archivo aquí o haz clic para seleccionar</div>
+          <div class="uz-hint">Excel (.xlsx, .xls) o CSV (.csv)</div>
+        </div>
+        <input type="file" class="file-input" id="fileInput" accept=".xlsx,.xls,.csv,.tsv" onchange="handleFileSelect(event)">
+      </div>
+
+      <!-- Step 2: Sheet selection (for multi-sheet Excel) -->
+      <div id="uploadStep2" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Selecciona la hoja</label>
+          <select class="form-select" id="sheetSelect" onchange="selectSheet()"></select>
+        </div>
+        <div class="mapping-preview" id="sheetPreview"></div>
+      </div>
+
+      <!-- Step 3: Column mapping -->
+      <div id="uploadStep3" style="display:none">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px">
+          Asigna las columnas de tu archivo a los campos del sistema.
+          Solo los campos marcados como requeridos (*) son obligatorios.
+        </p>
+        <div id="columnMappings" class="mapping-grid"></div>
+        <div class="mapping-preview" id="mappingPreview" style="margin-top:16px"></div>
+      </div>
+
+      <!-- Step 4: Supplier name (for price lists) -->
+      <div id="uploadStep4" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Nombre del proveedor *</label>
+          <input class="form-input" id="supplierName" placeholder="Ej: FANASA, Nadro, Equilibrio...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha de la lista</label>
+          <input class="form-input" type="date" id="priceListDate">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="uploadBackBtn" onclick="uploadStepBack()" style="display:none">Atrás</button>
+      <button class="btn btn-secondary" onclick="closeModal('uploadModal')">Cancelar</button>
+      <button class="btn btn-primary" id="uploadNextBtn" onclick="uploadStepNext()">Siguiente</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-header">
+    <div>
+      <h3 id="detailName">—</h3>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px" id="detailEan">—</div>
+    </div>
+    <button class="modal-close" onclick="closeDetail()">&times;</button>
+  </div>
+  <div class="detail-body" id="detailBody">
+    <!-- Dynamic detail content -->
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- SheetJS from CDN -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+
+<script>
+/* ================================================================
+   ResurtidoExpress — Comparador de Proveedores v1.0
+   Core Logic
+   © Mawddi / iKROX Technologies 2026
+   ================================================================ */
+
+// ---- STATE ----
+const DB_NAME = 'ResurtidoExpressDB';
+const DB_VERSION = 1;
+let db = null;
+
+let state = {
+  products: [],       // {id, ean, name, category, stock, min, max, reorderPoint, avgDailySales, currentSupplier, currentCost}
+  suppliers: [],      // {name, date, products: [{ean, name, listPrice, discount, netPrice, hasStock}]}
+  uploadMode: null,   // 'inventory' | 'prices'
+  uploadStep: 1,
+  workbook: null,
+  sheetData: null,
+  columns: [],
+  sortCol: null,
+  sortDir: 'asc',
+  stockFilter: 'all',
+  merged: []          // merged view for table
+};
+
+// ---- INDEXEDDB ----
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('products')) {
+        d.createObjectStore('products', { keyPath: 'id', autoIncrement: true });
+      }
+      if (!d.objectStoreNames.contains('suppliers')) {
+        d.createObjectStore('suppliers', { keyPath: 'name' });
+      }
+      if (!d.objectStoreNames.contains('meta')) {
+        d.createObjectStore('meta', { keyPath: 'key' });
+      }
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function dbPut(store, data) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readwrite');
+    const s = tx.objectStore(store);
+    if (Array.isArray(data)) {
+      data.forEach(item => s.put(item));
+    } else {
+      s.put(data);
+    }
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function dbGetAll(store) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readonly');
+    const s = tx.objectStore(store);
+    const req = s.getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function dbClear(store) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readwrite');
+    tx.objectStore(store).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+// ---- INIT ----
+async function init() {
+  await openDB();
+  state.products = await dbGetAll('products');
+  state.suppliers = await dbGetAll('suppliers');
+  mergePriceData();
+  updateStats();
+  renderTable();
+  populateFilters();
+  toast('ResurtidoExpress listo', 'success');
+}
+
+// ---- UPLOAD FLOW ----
+function openUploadModal(mode) {
+  state.uploadMode = mode;
+  state.uploadStep = 1;
+  state.workbook = null;
+  state.sheetData = null;
+  state.columns = [];
+
+  document.getElementById('uploadModalTitle').textContent =
+    mode === 'inventory' ? 'Cargar Inventario (SAV Export)' : 'Cargar Lista de Precios';
+
+  // Reset steps
+  showUploadStep(1);
+  document.getElementById('fileInput').value = '';
+  document.getElementById('uploadModal').classList.add('active');
+}
+
+function showUploadStep(step) {
+  state.uploadStep = step;
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('uploadStep' + i);
+    if (el) el.style.display = i === step ? 'block' : 'none';
+  }
+  document.getElementById('uploadBackBtn').style.display = step > 1 ? 'inline-flex' : 'none';
+
+  const nextBtn = document.getElementById('uploadNextBtn');
+  if (step === 3 && state.uploadMode === 'prices') {
+    nextBtn.textContent = 'Siguiente';
+  } else if ((step === 3 && state.uploadMode === 'inventory') || step === 4) {
+    nextBtn.textContent = 'Importar';
+  } else {
+    nextBtn.textContent = 'Siguiente';
+  }
+}
+
+function uploadStepBack() {
+  if (state.uploadStep > 1) {
+    // Skip sheet selection if single sheet
+    let prev = state.uploadStep - 1;
+    if (prev === 2 && state.workbook && state.workbook.SheetNames.length === 1) prev = 1;
+    showUploadStep(prev);
+  }
+}
+
+function uploadStepNext() {
+  const step = state.uploadStep;
+
+  if (step === 1) {
+    // Validate file loaded
+    if (!state.sheetData || state.sheetData.length === 0) {
+      toast('Selecciona un archivo primero', 'warning');
+      return;
+    }
+    // If multi-sheet, go to step 2; else skip to step 3
+    if (state.workbook && state.workbook.SheetNames.length > 1) {
+      populateSheetSelector();
+      showUploadStep(2);
+    } else {
+      buildColumnMapping();
+      showUploadStep(3);
+    }
+  } else if (step === 2) {
+    buildColumnMapping();
+    showUploadStep(3);
+  } else if (step === 3) {
+    if (state.uploadMode === 'prices') {
+      // Need supplier name
+      showUploadStep(4);
+      document.getElementById('priceListDate').value = new Date().toISOString().split('T')[0];
+    } else {
+      // Inventory — import directly
+      importData();
+    }
+  } else if (step === 4) {
+    const name = document.getElementById('supplierName').value.trim();
+    if (!name) {
+      toast('Escribe el nombre del proveedor', 'warning');
+      return;
+    }
+    importData();
+  }
+}
+
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  readFile(file);
+}
+
+// Drag & drop
+document.addEventListener('DOMContentLoaded', () => {
+  const zone = document.getElementById('uploadZone');
+  if (!zone) return;
+  zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', (e) => {
+    e.preventDefault(); zone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) readFile(e.dataTransfer.files[0]);
+  });
+});
+
+function readFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      state.workbook = XLSX.read(data, { type: 'array', cellDates: true });
+      const firstSheet = state.workbook.SheetNames[0];
+      state.sheetData = XLSX.utils.sheet_to_json(state.workbook.Sheets[firstSheet], { defval: '' });
+      if (state.sheetData.length > 0) {
+        state.columns = Object.keys(state.sheetData[0]);
+      }
+      toast(`Archivo cargado: ${file.name} (${state.sheetData.length} filas)`, 'success');
+      // Update upload zone visual
+      document.getElementById('uploadZone').innerHTML =
+        `<div class="uz-icon">✅</div>
+         <div class="uz-text" style="color:var(--accent)">${file.name}</div>
+         <div class="uz-hint">${state.sheetData.length} filas × ${state.columns.length} columnas</div>`;
+    } catch (err) {
+      toast('Error al leer archivo: ' + err.message, 'error');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function populateSheetSelector() {
+  const sel = document.getElementById('sheetSelect');
+  sel.innerHTML = state.workbook.SheetNames.map(n =>
+    `<option value="${n}">${n}</option>`
+  ).join('');
+  selectSheet();
+}
+
+function selectSheet() {
+  const name = document.getElementById('sheetSelect').value;
+  state.sheetData = XLSX.utils.sheet_to_json(state.workbook.Sheets[name], { defval: '' });
+  state.columns = state.sheetData.length > 0 ? Object.keys(state.sheetData[0]) : [];
+
+  // Show preview
+  const preview = document.getElementById('sheetPreview');
+  if (state.sheetData.length > 0) {
+    const rows = state.sheetData.slice(0, 5);
+    let html = '<table><thead><tr>' + state.columns.map(c => `<th>${esc(c)}</th>`).join('') + '</tr></thead><tbody>';
+    rows.forEach(r => {
+      html += '<tr>' + state.columns.map(c => `<td>${esc(String(r[c] || ''))}</td>`).join('') + '</tr>';
+    });
+    html += '</tbody></table>';
+    preview.innerHTML = html;
+  }
+}
+
+// ---- COLUMN MAPPING ----
+const INVENTORY_FIELDS = [
+  { key: 'ean', label: 'EAN / Código *', required: true },
+  { key: 'name', label: 'Nombre del producto *', required: true },
+  { key: 'category', label: 'Categoría / Departamento', required: false },
+  { key: 'stock', label: 'Existencia actual *', required: true },
+  { key: 'min', label: 'Stock mínimo', required: false },
+  { key: 'max', label: 'Stock máximo', required: false },
+  { key: 'reorderPoint', label: 'Punto de reorden', required: false },
+  { key: 'avgDailySales', label: 'Venta promedio diaria', required: false },
+  { key: 'currentSupplier', label: 'Proveedor actual', required: false },
+  { key: 'currentCost', label: 'Costo actual', required: false },
+];
+
+const PRICE_FIELDS = [
+  { key: 'ean', label: 'EAN / Código *', required: true },
+  { key: 'name', label: 'Nombre del producto *', required: true },
+  { key: 'listPrice', label: 'Precio de lista *', required: true },
+  { key: 'discount', label: 'Descuento (%)', required: false },
+  { key: 'netPrice', label: 'Precio neto', required: false },
+  { key: 'hasStock', label: '¿Tiene stock?', required: false },
+  { key: 'unit', label: 'Unidad / Presentación', required: false },
+];
+
+function buildColumnMapping() {
+  const fields = state.uploadMode === 'inventory' ? INVENTORY_FIELDS : PRICE_FIELDS;
+  const container = document.getElementById('columnMappings');
+
+  container.innerHTML = fields.map(f => {
+    const options = ['<option value="">(No mapear)</option>'];
+    state.columns.forEach(c => {
+      const selected = autoMatch(f.key, c) ? 'selected' : '';
+      options.push(`<option value="${esc(c)}" ${selected}>${esc(c)}</option>`);
+    });
+    return `
+      <div class="form-group">
+        <label class="form-label">${f.label}</label>
+        <select class="form-select" data-field="${f.key}">${options.join('')}</select>
+      </div>`;
+  }).join('');
+
+  updateMappingPreview();
+  // Add change listeners
+  container.querySelectorAll('select').forEach(s => s.addEventListener('change', updateMappingPreview));
+}
+
+function autoMatch(fieldKey, columnName) {
+  const cn = columnName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const maps = {
+    ean: ['ean', 'codigo', 'code', 'barcode', 'clave', 'sku', 'cod'],
+    name: ['nombre', 'descripcion', 'producto', 'name', 'articulo', 'desc'],
+    category: ['categoria', 'departamento', 'category', 'grupo', 'linea', 'area'],
+    stock: ['existencia', 'stock', 'cantidad', 'inventario', 'qty', 'disponible'],
+    min: ['minimo', 'min', 'stock_min'],
+    max: ['maximo', 'max', 'stock_max'],
+    reorderPoint: ['reorden', 'reorder', 'punto_reorden'],
+    avgDailySales: ['venta_diaria', 'venta_promedio', 'avg_sales', 'promedio'],
+    currentSupplier: ['proveedor', 'supplier', 'prov'],
+    currentCost: ['costo', 'cost', 'precio_compra', 'precio_costo'],
+    listPrice: ['precio', 'price', 'precio_lista', 'list_price', 'p_lista', 'p.lista'],
+    discount: ['descuento', 'discount', 'desc', 'dto', 'dcto'],
+    netPrice: ['neto', 'net', 'precio_neto', 'net_price', 'p_neto'],
+    hasStock: ['stock', 'disponible', 'existencia', 'available'],
+    unit: ['unidad', 'presentacion', 'unit', 'pres'],
+  };
+  const keywords = maps[fieldKey] || [];
+  return keywords.some(k => cn.includes(k));
+}
+
+function updateMappingPreview() {
+  const selects = document.querySelectorAll('#columnMappings select');
+  const mapping = {};
+  selects.forEach(s => { if (s.value) mapping[s.dataset.field] = s.value; });
+
+  const preview = document.getElementById('mappingPreview');
+  if (state.sheetData.length === 0) return;
+
+  const rows = state.sheetData.slice(0, 3);
+  const fields = Object.entries(mapping);
+  if (fields.length === 0) {
+    preview.innerHTML = '<p style="padding:12px;color:var(--text3);font-size:12px">Mapea al menos una columna para ver la vista previa</p>';
+    return;
+  }
+
+  let html = '<table><thead><tr>' + fields.map(([f]) => `<th>${f}</th>`).join('') + '</tr></thead><tbody>';
+  rows.forEach(r => {
+    html += '<tr>' + fields.map(([, col]) => `<td>${esc(String(r[col] || ''))}</td>`).join('') + '</tr>';
+  });
+  html += '</tbody></table>';
+  preview.innerHTML = html;
+}
+
+// ---- IMPORT DATA ----
+async function importData() {
+  const selects = document.querySelectorAll('#columnMappings select');
+  const mapping = {};
+  selects.forEach(s => { if (s.value) mapping[s.dataset.field] = s.value; });
+
+  if (state.uploadMode === 'inventory') {
+    // Validate required
+    if (!mapping.ean || !mapping.name || !mapping.stock) {
+      toast('Mapea al menos: EAN, Nombre y Existencia', 'warning');
+      return;
+    }
+    const products = state.sheetData.map((row, i) => {
+      const ean = cleanEAN(String(row[mapping.ean] || ''));
+      if (!ean) return null;
+      return {
+        id: ean || `prod_${i}`,
+        ean: ean,
+        name: String(row[mapping.name] || '').trim(),
+        category: mapping.category ? String(row[mapping.category] || '').trim() : '',
+        stock: parseNum(row[mapping.stock]),
+        min: mapping.min ? parseNum(row[mapping.min]) : 0,
+        max: mapping.max ? parseNum(row[mapping.max]) : 0,
+        reorderPoint: mapping.reorderPoint ? parseNum(row[mapping.reorderPoint]) : 0,
+        avgDailySales: mapping.avgDailySales ? parseFloat(row[mapping.avgDailySales]) || 0 : 0,
+        currentSupplier: mapping.currentSupplier ? String(row[mapping.currentSupplier] || '').trim() : '',
+        currentCost: mapping.currentCost ? parseNum(row[mapping.currentCost]) : 0,
+      };
+    }).filter(Boolean);
+
+    state.products = products;
+    await dbClear('products');
+    await dbPut('products', products);
+    toast(`${products.length} productos importados`, 'success');
+
+  } else {
+    // Price list
+    if (!mapping.ean || !mapping.name || !mapping.listPrice) {
+      toast('Mapea al menos: EAN, Nombre y Precio de lista', 'warning');
+      return;
+    }
+
+    const supplierName = document.getElementById('supplierName').value.trim().toUpperCase();
+    const listDate = document.getElementById('priceListDate').value || new Date().toISOString().split('T')[0];
+
+    const products = state.sheetData.map(row => {
+      const ean = cleanEAN(String(row[mapping.ean] || ''));
+      if (!ean) return null;
+      const listPrice = parseNum(row[mapping.listPrice]);
+      const discount = mapping.discount ? parseFloat(row[mapping.discount]) || 0 : 0;
+      let netPrice = mapping.netPrice ? parseNum(row[mapping.netPrice]) : 0;
+      if (!netPrice && listPrice > 0 && discount > 0) {
+        netPrice = listPrice * (1 - discount / 100);
+      }
+      if (!netPrice) netPrice = listPrice;
+
+      return {
+        ean: ean,
+        name: String(row[mapping.name] || '').trim(),
+        listPrice: listPrice,
+        discount: discount,
+        netPrice: Math.round(netPrice * 100) / 100,
+        hasStock: mapping.hasStock ? parseBool(row[mapping.hasStock]) : true,
+        unit: mapping.unit ? String(row[mapping.unit] || '').trim() : '',
+      };
+    }).filter(p => p && p.netPrice > 0);
+
+    const supplier = {
+      name: supplierName,
+      date: listDate,
+      productCount: products.length,
+      products: products,
+    };
+
+    // Update or add supplier
+    const idx = state.suppliers.findIndex(s => s.name === supplierName);
+    if (idx >= 0) {
+      state.suppliers[idx] = supplier;
+    } else {
+      state.suppliers.push(supplier);
+    }
+    await dbPut('suppliers', supplier);
+    toast(`${supplierName}: ${products.length} productos cargados`, 'success');
+  }
+
+  closeModal('uploadModal');
+  mergePriceData();
+  updateStats();
+  renderTable();
+  populateFilters();
+}
+
+// ---- DATA PROCESSING ----
+function cleanEAN(val) {
+  return val.replace(/[^0-9a-zA-Z-]/g, '').trim();
+}
+
+function parseNum(val) {
+  if (typeof val === 'number') return val;
+  if (!val) return 0;
+  const str = String(val).replace(/[$,\s]/g, '').replace(/[^\d.-]/g, '');
+  return parseFloat(str) || 0;
+}
+
+function parseBool(val) {
+  if (typeof val === 'boolean') return val;
+  const s = String(val).toLowerCase().trim();
+  return ['si', 'sí', 'yes', '1', 'true', 'disponible', 'ok', 'x'].includes(s);
+}
+
+function mergePriceData() {
+  // Create merged view: one row per product with prices from all suppliers
+  const productMap = new Map();
+
+  // Start with inventory products
+  state.products.forEach(p => {
+    productMap.set(p.ean, {
+      ean: p.ean,
+      name: p.name,
+      category: p.category,
+      stock: p.stock,
+      min: p.min,
+      max: p.max,
+      reorderPoint: p.reorderPoint || p.min,
+      avgDailySales: p.avgDailySales,
+      currentSupplier: p.currentSupplier,
+      currentCost: p.currentCost,
+      prices: {},
+      cheapest: null,
+      cheapestPrice: Infinity,
+      suggestedQty: 0,
+    });
+  });
+
+  // Add products from supplier lists that might not be in inventory
+  state.suppliers.forEach(sup => {
+    sup.products.forEach(sp => {
+      if (!productMap.has(sp.ean)) {
+        productMap.set(sp.ean, {
+          ean: sp.ean,
+          name: sp.name,
+          category: '',
+          stock: null, // unknown — not in inventory
+          min: 0, max: 0, reorderPoint: 0, avgDailySales: 0,
+          currentSupplier: '', currentCost: 0,
+          prices: {},
+          cheapest: null,
+          cheapestPrice: Infinity,
+          suggestedQty: 0,
+        });
+      }
+      const entry = productMap.get(sp.ean);
+      entry.prices[sup.name] = {
+        listPrice: sp.listPrice,
+        discount: sp.discount,
+        netPrice: sp.netPrice,
+        hasStock: sp.hasStock,
+        date: sup.date,
+      };
+
+      // Track cheapest with stock
+      if (sp.hasStock && sp.netPrice > 0 && sp.netPrice < entry.cheapestPrice) {
+        entry.cheapestPrice = sp.netPrice;
+        entry.cheapest = sup.name;
+      }
+    });
+  });
+
+  // Calculate suggested quantities
+  productMap.forEach(p => {
+    if (p.stock !== null && p.reorderPoint > 0 && p.stock <= p.reorderPoint) {
+      if (p.avgDailySales > 0) {
+        // Formula from CADENA_SUMINISTRO.md
+        const deliveryDays = 3; // default, configurable later
+        const safetyDays = 3;
+        const consumeUntilDelivery = p.avgDailySales * deliveryDays;
+        const safetyStock = p.avgDailySales * safetyDays;
+        p.suggestedQty = Math.ceil(consumeUntilDelivery + safetyStock - p.stock);
+        if (p.suggestedQty < 1) p.suggestedQty = 1;
+      } else {
+        // Fallback: order up to max or reorder + buffer
+        p.suggestedQty = Math.max(1, (p.max || p.reorderPoint * 2) - p.stock);
+      }
+    }
+  });
+
+  state.merged = Array.from(productMap.values());
+}
+
+// ---- FILTERING & SORTING ----
+function applyFilters() {
+  renderTable();
+}
+
+function getFilteredData() {
+  let data = [...state.merged];
+  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+  const supplier = document.getElementById('filterSupplier').value;
+  const category = document.getElementById('filterCategory').value;
+  const stockFilter = state.stockFilter;
+
+  if (search) {
+    data = data.filter(p =>
+      p.name.toLowerCase().includes(search) ||
+      p.ean.toLowerCase().includes(search) ||
+      (p.category && p.category.toLowerCase().includes(search))
+    );
+  }
+
+  if (supplier) {
+    data = data.filter(p => p.prices[supplier]);
+  }
+
+  if (category) {
+    data = data.filter(p => p.category === category);
+  }
+
+  if (stockFilter === 'reorder') {
+    data = data.filter(p => p.stock !== null && p.reorderPoint > 0 && p.stock <= p.reorderPoint && p.stock > 0);
+  } else if (stockFilter === 'critical') {
+    data = data.filter(p => p.stock !== null && p.stock <= 0);
+  } else if (stockFilter === 'ok') {
+    data = data.filter(p => p.stock !== null && (p.reorderPoint <= 0 || p.stock > p.reorderPoint));
+  }
+
+  // Sort
+  if (state.sortCol) {
+    data.sort((a, b) => {
+      let va = getSortValue(a, state.sortCol);
+      let vb = getSortValue(b, state.sortCol);
+      if (typeof va === 'string') va = va.toLowerCase();
+      if (typeof vb === 'string') vb = vb.toLowerCase();
+      let cmp = 0;
+      if (va < vb) cmp = -1;
+      else if (va > vb) cmp = 1;
+      return state.sortDir === 'asc' ? cmp : -cmp;
+    });
+  }
+
+  return data;
+}
+
+function getSortValue(item, col) {
+  if (col === 'name') return item.name;
+  if (col === 'ean') return item.ean;
+  if (col === 'stock') return item.stock ?? -1;
+  if (col === 'category') return item.category || '';
+  if (col === 'suggestedQty') return item.suggestedQty;
+  if (col === 'cheapestPrice') return item.cheapestPrice === Infinity ? 999999 : item.cheapestPrice;
+  // Supplier price columns
+  if (item.prices[col]) return item.prices[col].netPrice;
+  return 0;
+}
+
+function setStockFilter(el) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  state.stockFilter = el.dataset.filter;
+  applyFilters();
+}
+
+function sortByColumn(col) {
+  if (state.sortCol === col) {
+    state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    state.sortCol = col;
+    state.sortDir = 'asc';
+  }
+  renderTable();
+}
+
+// ---- RENDERING ----
+function renderTable() {
+  const data = getFilteredData();
+  const supplierNames = state.suppliers.map(s => s.name);
+  const hasData = state.merged.length > 0;
+
+  document.getElementById('emptyState').style.display = hasData ? 'none' : 'flex';
+  document.getElementById('dataTable').style.display = hasData ? 'table' : 'none';
+
+  if (!hasData) return;
+
+  // Header
+  const header = document.getElementById('tableHeader');
+  let headerHtml = `
+    <th class="col-product ${sortClass('name')}" onclick="sortByColumn('name')">Producto</th>
+    <th class="${sortClass('ean')}" onclick="sortByColumn('ean')" style="min-width:100px">EAN</th>
+    <th class="col-stock ${sortClass('stock')}" onclick="sortByColumn('stock')">Stock</th>
+    <th class="${sortClass('suggestedQty')}" onclick="sortByColumn('suggestedQty')" style="text-align:center">Pedir</th>
+  `;
+  supplierNames.forEach(s => {
+    headerHtml += `<th class="col-price ${sortClass(s)}" onclick="sortByColumn('${esc(s)}')">${esc(s)}</th>`;
+  });
+  headerHtml += `<th class="col-price ${sortClass('cheapestPrice')}" onclick="sortByColumn('cheapestPrice')">Mejor</th>`;
+  header.innerHTML = headerHtml;
+
+  // Body
+  const body = document.getElementById('tableBody');
+  if (data.length === 0) {
+    body.innerHTML = '<tr><td colspan="' + (4 + supplierNames.length + 1) + '" style="text-align:center;padding:40px;color:var(--text3)">Sin resultados para los filtros aplicados</td></tr>';
+    document.getElementById('resultCount').textContent = '0 resultados';
+    return;
+  }
+
+  let html = '';
+  data.forEach(p => {
+    const stockClass = getStockClass(p);
+    const stockLabel = p.stock !== null ? p.stock : '?';
+
+    html += `<tr onclick="showDetail('${esc(p.ean)}')" style="cursor:pointer">`;
+
+    // Product
+    html += `<td class="col-product">
+      <div class="product-name">${esc(p.name)}</div>
+      ${p.category ? `<div class="product-category">${esc(p.category)}</div>` : ''}
+    </td>`;
+
+    // EAN
+    html += `<td class="col-ean">${esc(p.ean)}</td>`;
+
+    // Stock
+    html += `<td class="col-stock"><span class="stock-badge ${stockClass}">${stockLabel}</span></td>`;
+
+    // Suggested qty
+    if (p.suggestedQty > 0) {
+      const urgency = p.stock <= 0 ? 'reorder-urgent' : 'reorder-needed';
+      html += `<td style="text-align:center"><span class="reorder-indicator"><span class="reorder-qty ${urgency}">${p.suggestedQty}</span></span></td>`;
+    } else {
+      html += `<td style="text-align:center"><span class="reorder-indicator"><span class="reorder-qty reorder-ok">—</span></span></td>`;
+    }
+
+    // Supplier prices
+    supplierNames.forEach(s => {
+      const price = p.prices[s];
+      if (!price) {
+        html += `<td class="col-price price-cell no-price">—</td>`;
+      } else {
+        const isCheapest = p.cheapest === s;
+        const noStock = !price.hasStock;
+        const cls = isCheapest ? 'cheapest' : (noStock ? 'no-stock' : '');
+        html += `<td class="col-price price-cell ${cls}">
+          $${price.netPrice.toFixed(2)}
+          ${price.discount > 0 ? `<span class="price-discount">${price.discount}% dto</span>` : ''}
+        </td>`;
+      }
+    });
+
+    // Best price
+    if (p.cheapest && p.cheapestPrice < Infinity) {
+      html += `<td class="col-price" style="color:var(--cheapest);font-weight:700;font-family:var(--mono)">
+        $${p.cheapestPrice.toFixed(2)}
+        <span class="price-discount" style="color:var(--accent)">${esc(p.cheapest)}</span>
+      </td>`;
+    } else {
+      html += `<td class="col-price" style="color:var(--text3)">—</td>`;
+    }
+
+    html += '</tr>';
+  });
+
+  body.innerHTML = html;
+  document.getElementById('resultCount').textContent = `${data.length} de ${state.merged.length}`;
+}
+
+function sortClass(col) {
+  if (state.sortCol !== col) return '';
+  return state.sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc';
+}
+
+function getStockClass(p) {
+  if (p.stock === null) return '';
+  if (p.stock <= 0) return 'stock-out';
+  if (p.reorderPoint > 0 && p.stock <= p.reorderPoint) return 'stock-low';
+  if (p.min > 0 && p.stock <= p.min) return 'stock-critical';
+  return 'stock-ok';
+}
+
+// ---- STATS ----
+function updateStats() {
+  const m = state.merged;
+  const withStock = m.filter(p => p.stock !== null);
+
+  document.getElementById('statProducts').textContent = m.length;
+  document.getElementById('statProductsSub').textContent = withStock.length > 0 ? `${withStock.length} con inventario` : 'Sin inventario';
+
+  document.getElementById('statSuppliers').textContent = state.suppliers.length;
+  const totalPriced = state.suppliers.reduce((a, s) => a + s.productCount, 0);
+  document.getElementById('statSuppliersSub').textContent = `${totalPriced} precios cargados`;
+
+  const needReorder = withStock.filter(p => p.reorderPoint > 0 && p.stock <= p.reorderPoint && p.stock > 0);
+  document.getElementById('statReorder').textContent = needReorder.length;
+  document.getElementById('statReorderSub').textContent = needReorder.length > 0
+    ? `${needReorder.reduce((a, p) => a + p.suggestedQty, 0)} unidades sugeridas`
+    : 'Todo OK';
+
+  const outOfStock = withStock.filter(p => p.stock <= 0);
+  document.getElementById('statCritical').textContent = outOfStock.length;
+  document.getElementById('statCriticalSub').textContent = outOfStock.length > 0
+    ? `${((outOfStock.length / withStock.length) * 100).toFixed(1)}% del catálogo`
+    : 'Sin faltantes';
+
+  // Savings: compare current cost vs cheapest supplier
+  let savings = 0;
+  withStock.forEach(p => {
+    if (p.currentCost > 0 && p.cheapest && p.cheapestPrice < p.currentCost) {
+      savings += (p.currentCost - p.cheapestPrice) * Math.max(1, p.avgDailySales * 30);
+    }
+  });
+  document.getElementById('statSavings').textContent = savings > 0 ? `$${Math.round(savings).toLocaleString()}` : '$0';
+  document.getElementById('statSavingsSub').textContent = savings > 0 ? 'estimado mensual' : 'vs proveedor actual';
+}
+
+// ---- FILTERS POPULATION ----
+function populateFilters() {
+  const supSel = document.getElementById('filterSupplier');
+  const catSel = document.getElementById('filterCategory');
+  const currentSup = supSel.value;
+  const currentCat = catSel.value;
+
+  supSel.innerHTML = '<option value="">Todos los proveedores</option>' +
+    state.suppliers.map(s => `<option value="${esc(s.name)}">${esc(s.name)} (${s.productCount})</option>`).join('');
+  supSel.value = currentSup;
+
+  const categories = [...new Set(state.merged.map(p => p.category).filter(Boolean))].sort();
+  catSel.innerHTML = '<option value="">Todas las categorías</option>' +
+    categories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  catSel.value = currentCat;
+}
+
+// ---- DETAIL PANEL ----
+function showDetail(ean) {
+  const p = state.merged.find(x => x.ean === ean);
+  if (!p) return;
+
+  document.getElementById('detailName').textContent = p.name;
+  document.getElementById('detailEan').textContent = `EAN: ${p.ean}`;
+
+  // Build supplier ranking
+  const supplierPrices = Object.entries(p.prices)
+    .map(([name, data]) => ({ name, ...data }))
+    .sort((a, b) => {
+      if (a.hasStock && !b.hasStock) return -1;
+      if (!a.hasStock && b.hasStock) return 1;
+      return a.netPrice - b.netPrice;
+    });
+
+  let html = '';
+
+  // Inventory info
+  if (p.stock !== null) {
+    html += `
+    <div class="detail-section">
+      <div class="detail-section-title">Inventario</div>
+      <div class="detail-row"><span class="label">Existencia</span><span class="value" style="color:${p.stock <= 0 ? 'var(--danger)' : p.stock <= (p.reorderPoint || p.min) ? 'var(--warn)' : 'var(--accent)'}">${p.stock}</span></div>
+      ${p.min > 0 ? `<div class="detail-row"><span class="label">Mínimo</span><span class="value">${p.min}</span></div>` : ''}
+      ${p.max > 0 ? `<div class="detail-row"><span class="label">Máximo</span><span class="value">${p.max}</span></div>` : ''}
+      ${p.reorderPoint > 0 ? `<div class="detail-row"><span class="label">Punto de reorden</span><span class="value">${p.reorderPoint}</span></div>` : ''}
+      ${p.avgDailySales > 0 ? `<div class="detail-row"><span class="label">Venta promedio diaria</span><span class="value">${p.avgDailySales.toFixed(1)}</span></div>` : ''}
+      ${p.avgDailySales > 0 && p.stock > 0 ? `<div class="detail-row"><span class="label">Días de inventario</span><span class="value">${Math.round(p.stock / p.avgDailySales)} días</span></div>` : ''}
+      ${p.currentCost > 0 ? `<div class="detail-row"><span class="label">Costo actual</span><span class="value">$${p.currentCost.toFixed(2)}</span></div>` : ''}
+      ${p.currentSupplier ? `<div class="detail-row"><span class="label">Proveedor actual</span><span class="value">${esc(p.currentSupplier)}</span></div>` : ''}
+    </div>`;
+  }
+
+  // Reorder suggestion
+  if (p.suggestedQty > 0) {
+    html += `
+    <div class="detail-section">
+      <div class="detail-section-title">Resurtido sugerido</div>
+      <div class="detail-row">
+        <span class="label">Cantidad a pedir</span>
+        <span class="value" style="color:var(--warn);font-size:18px">${p.suggestedQty}</span>
+      </div>
+      ${p.cheapest ? `
+      <div class="detail-row">
+        <span class="label">Mejor proveedor</span>
+        <span class="value" style="color:var(--cheapest)">${esc(p.cheapest)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Costo estimado</span>
+        <span class="value" style="color:var(--cheapest)">$${(p.cheapestPrice * p.suggestedQty).toFixed(2)}</span>
+      </div>` : ''}
+    </div>`;
+  }
+
+  // Supplier ranking
+  if (supplierPrices.length > 0) {
+    html += `<div class="detail-section"><div class="detail-section-title">Proveedores (${supplierPrices.length})</div>`;
+    supplierPrices.forEach((sp, i) => {
+      const rankClass = i === 0 && sp.hasStock ? 'rank-1' : '';
+      html += `
+      <div class="supplier-rank ${rankClass}">
+        <div class="rank-num">${i + 1}</div>
+        <div class="rank-info">
+          <div class="rank-name">${esc(sp.name)}</div>
+          <div class="rank-details">
+            Lista: $${sp.listPrice.toFixed(2)}
+            ${sp.discount > 0 ? ` · ${sp.discount}% dto` : ''}
+            ${!sp.hasStock ? ' · <span style="color:var(--danger)">Sin stock</span>' : ''}
+          </div>
+        </div>
+        <div class="rank-price" style="color:${!sp.hasStock ? 'var(--text3)' : i === 0 ? 'var(--cheapest)' : 'var(--text)'}">
+          $${sp.netPrice.toFixed(2)}
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('detailBody').innerHTML = html;
+  document.getElementById('detailPanel').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('open');
+}
+
+// Close detail on click outside
+document.addEventListener('click', (e) => {
+  const panel = document.getElementById('detailPanel');
+  if (panel.classList.contains('open') && !panel.contains(e.target) && !e.target.closest('tr')) {
+    closeDetail();
+  }
+});
+
+// ---- EXPORT ----
+function exportData() {
+  const data = getFilteredData();
+  if (data.length === 0) {
+    toast('No hay datos para exportar', 'warning');
+    return;
+  }
+
+  const supplierNames = state.suppliers.map(s => s.name);
+
+  // Build export rows
+  const headers = ['EAN', 'Producto', 'Categoría', 'Stock', 'Mínimo', 'Máximo',
+    'Punto Reorden', 'Venta Diaria', 'Pedir', 'Proveedor Actual', 'Costo Actual'];
+  supplierNames.forEach(s => headers.push(`${s} (Neto)`));
+  headers.push('Mejor Proveedor', 'Mejor Precio');
+
+  const rows = data.map(p => {
+    const row = [
+      p.ean, p.name, p.category, p.stock ?? '', p.min, p.max,
+      p.reorderPoint, p.avgDailySales || '', p.suggestedQty || '',
+      p.currentSupplier, p.currentCost || '',
+    ];
+    supplierNames.forEach(s => {
+      row.push(p.prices[s] ? p.prices[s].netPrice : '');
+    });
+    row.push(p.cheapest || '', p.cheapestPrice < Infinity ? p.cheapestPrice : '');
+    return row;
+  });
+
+  // Create workbook
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+  // Column widths
+  ws['!cols'] = headers.map((h, i) => ({ wch: i === 1 ? 35 : i === 0 ? 15 : 14 }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Comparador');
+
+  // Export per supplier (sheets for orders)
+  supplierNames.forEach(s => {
+    const orderProducts = data.filter(p => p.cheapest === s && p.suggestedQty > 0);
+    if (orderProducts.length === 0) return;
+    const orderHeaders = ['EAN', 'Producto', 'Cantidad', 'Precio Unitario', 'Subtotal'];
+    const orderRows = orderProducts.map(p => [
+      p.ean, p.name, p.suggestedQty, p.cheapestPrice,
+      Math.round(p.suggestedQty * p.cheapestPrice * 100) / 100,
+    ]);
+    const total = orderRows.reduce((a, r) => a + r[4], 0);
+    orderRows.push(['', '', '', 'TOTAL:', Math.round(total * 100) / 100]);
+    const ows = XLSX.utils.aoa_to_sheet([orderHeaders, ...orderRows]);
+    ows['!cols'] = [{ wch: 15 }, { wch: 35 }, { wch: 10 }, { wch: 14 }, { wch: 14 }];
+    XLSX.utils.book_append_sheet(wb, ows, `Pedido ${s.substring(0, 25)}`);
+  });
+
+  const filename = `ResurtidoExpress_${new Date().toISOString().split('T')[0]}.xlsx`;
+  XLSX.writeFile(wb, filename);
+  toast(`Exportado: ${filename}`, 'success');
+}
+
+// ---- CLEAR DATA ----
+async function clearAllData() {
+  if (!confirm('¿Eliminar todos los datos cargados? Esta acción no se puede deshacer.')) return;
+  await dbClear('products');
+  await dbClear('suppliers');
+  state.products = [];
+  state.suppliers = [];
+  state.merged = [];
+  updateStats();
+  renderTable();
+  populateFilters();
+  toast('Datos eliminados', 'success');
+}
+
+// ---- UTILITIES ----
+function esc(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+function toast(msg, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${msg}</span>`;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(100%)';
+    el.style.transition = 'all .3s';
+    setTimeout(() => el.remove(), 300);
+  }, 3500);
+}
+
+// ---- KEYBOARD SHORTCUTS ----
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeDetail();
+    closeModal('uploadModal');
+  }
+  // Ctrl+F focus search
+  if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+    e.preventDefault();
+    document.getElementById('searchInput').focus();
+  }
+});
+
+// ---- BOOT ----
+init();
+</script>
+</body>
+</html>
